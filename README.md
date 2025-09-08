@@ -566,6 +566,104 @@ ref.listenToEvent(
 // StreamSubscription? subscription; // Not needed!
 ```
 
+## 🚀 Roadmap
+
+We're continuously working to make riverpod_event_bus even more powerful and developer-friendly. Here are the upcoming features we're planning to implement:
+
+### 📌 Sticky Events (v0.2.0)
+**Persistent event state for late subscribers**
+
+Keep the last event of a specific type and automatically deliver it to new subscribers. Perfect for maintaining app state like authentication, theme settings, or initial data loads.
+
+```dart
+// Publish a sticky event that persists
+eventBus.publishSticky(UserLoggedInEvent(
+  userId: 'user-123',
+  email: 'user@example.com',
+));
+
+// Late subscribers immediately receive the last sticky event
+eventBus.ofTypeSticky<UserLoggedInEvent>().listen((event) {
+  // Receives the last UserLoggedInEvent immediately
+  print('User state: ${event.email}');
+});
+```
+
+**Use Cases:**
+- Authentication state persistence
+- Theme/locale settings
+- Configuration data
+- Last known location or status
+
+### 🔧 Event Interceptors/Middleware (v0.2.0)
+**Cross-cutting concerns for all events**
+
+Add pre and post-processing logic to all events flowing through the event bus. Implement logging, analytics, error handling, and monitoring in a centralized way.
+
+```dart
+// Add interceptors for cross-cutting concerns
+eventBus.addInterceptor(
+  EventInterceptor(
+    onPublish: (event) => logger.log('Publishing: ${event.eventType}'),
+    onSubscribe: (event) => analytics.track(event),
+    onError: (event, error) => crashlytics.recordError(error, event),
+  ),
+);
+
+// All events automatically flow through interceptors
+eventBus.publish(anyEvent); // Automatically logged and tracked
+```
+
+**Use Cases:**
+- Centralized logging
+- Analytics tracking
+- Error reporting
+- Performance monitoring
+- Security auditing
+- Event validation
+
+### 📚 Event History/Replay (v0.3.0)
+**Time-travel debugging and state reconstruction**
+
+Store recent events and replay them for debugging, testing, or state reconstruction. Configure buffer size and replay strategies for different scenarios.
+
+```dart
+// Create an event bus with history buffer
+final replayBus = ReplayEventBus(
+  bufferSize: 20, // Keep last 20 events
+  duration: Duration(minutes: 5), // Or time-based buffer
+);
+
+// Replay recent events for debugging
+replayBus.replayLast(10).listen((event) {
+  print('Replaying: ${event.eventType} at ${event.occurredAt}');
+});
+
+// Useful for debugging state issues
+replayBus.replayWhere(
+  (event) => event.category == AppCategories.user,
+).listen((event) {
+  // Replay only user-related events
+});
+```
+
+**Use Cases:**
+- Debug mode event replay
+- State reconstruction after errors
+- Testing and development
+- Audit trails
+- Undo/redo functionality
+
+### 🎯 Additional Planned Features
+
+- **Wildcard Subscriptions**: Pattern-based event matching (e.g., `user.*`, `order.#`)
+- **Priority Subscriptions**: Control event processing order
+- **Dead Letter Queue**: Track and handle unprocessed events
+- **Event Metrics**: Built-in performance and usage statistics
+- **Event Batching**: Optimize performance with batch processing
+
+We're always open to community feedback! If you have ideas for features or improvements, please [open an issue](https://github.com/bbeeco1218/riverpod_event_bus/issues) or join the discussion.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
