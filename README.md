@@ -14,8 +14,10 @@ A powerful, type-safe event bus library that integrates seamlessly with **Riverp
 - 🏗️ **Architecture enforcement** (View/ViewModel separation)
 - 🛡️ **Memory leak prevention** with automatic subscription disposal
 - ⚡ **Advanced event processing** (throttling, buffering, filtering)
+- 🔥 **Pure interface-based event categories** (industry best practices)
+- 🧩 **Developer experience optimized** with progressive enhancement
 - 🐛 **Debug-friendly** with comprehensive logging and error handling
-- ✅ **Fully tested** (54 tests, 100% pass rate)
+- ✅ **Fully tested** (72 tests, 100% pass rate)
 
 ## 📦 Installation
 
@@ -54,9 +56,36 @@ void main() {
 
 ### 2. Create domain events
 
+The library follows **industry best practices** by using a pure interface-based approach for event categories. You define categories that match your specific domain needs, just like popular EventBus libraries in Android and JavaScript ecosystems.
+
+#### 🎯 **Define Your Event Categories**
+
+First, create categories specific to your application domain:
+
 ```dart
 import 'package:riverpod_event_bus/riverpod_event_bus.dart';
 
+// Define categories for your app domain
+class AppEventCategories implements IEventCategory {
+  @override
+  final String value;
+  @override  
+  final String displayName;
+  
+  const AppEventCategories._(this.value, this.displayName);
+  
+  // Define your app-specific categories
+  static const user = AppEventCategories._('user', 'User Events');
+  static const order = AppEventCategories._('order', 'Order Events'); 
+  static const system = AppEventCategories._('system', 'System Events');
+}
+```
+
+#### 🚀 **Create Your Domain Events**
+
+Then use your categories in domain events:
+
+```dart
 class UserRegisteredEvent extends DomainEvent {
   final String userId;
   final String email;
@@ -68,7 +97,7 @@ class UserRegisteredEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
     eventType: 'user.registered',
-    category: EventCategory.user,
+    category: AppEventCategories.user,  // ✨ Your custom category
   );
 
   @override
@@ -77,6 +106,33 @@ class UserRegisteredEvent extends DomainEvent {
     'email': email,
     ...super.toJson(),
   };
+}
+```
+
+#### 🏥 **Domain-Specific Categories** (Advanced)
+
+For complex domains, create specialized category groups:
+
+```dart
+// Medical domain categories
+class MedicalCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+  
+  const MedicalCategories._(this.value, this.displayName);
+  
+  static const patient = MedicalCategories._('medical.patient', 'Patient Events');
+  static const doctor = MedicalCategories._('medical.doctor', 'Doctor Events');
+  static const appointment = MedicalCategories._('medical.appointment', 'Appointment Events');
+}
+
+class PatientAdmittedEvent extends DomainEvent {
+  const PatientAdmittedEvent({...}) : super(
+    eventType: 'patient.admitted',
+    category: MedicalCategories.patient,  // ✨ Domain-specific category
+  );
 }
 ```
 
@@ -92,7 +148,7 @@ class UserRepository extends _$UserRepository {
     // Your registration logic...
     final userId = await _performRegistration(email);
     
-    // Publish the event
+    // Publish the event with your custom category
     final eventBus = ref.read(domainEventBusProvider);
     eventBus.publish(UserRegisteredEvent(
       userId: userId,
@@ -225,6 +281,27 @@ ref.listenToMultipleEvents({
 }, debugName: 'UserNotifier');
 ```
 
+### Event Category Filtering
+
+```dart
+// Filter by category type
+ref.listenToEvent(
+  eventBus.stream.where((event) => event.category.isUserRelated),
+  (event) => _handleUserEvent(event),
+  debugName: 'UserEventHandler',
+);
+
+// Filter by category namespace
+final medicalEvents = eventBus.stream.where(
+  (event) => event.category.belongsTo('medical'),
+);
+
+// Filter by custom categories
+final criticalEvents = eventBus.stream.where(
+  (event) => event.category.value.contains('critical'),
+);
+```
+
 ### Advanced Event Bus Features
 
 ```dart
@@ -273,34 +350,142 @@ class EventBusMonitor extends _$EventBusMonitor {
 
 ## 🎨 Event Categories
 
-Organize your events using predefined categories:
+The library uses a **pure interface-based approach** for event categories, following industry best practices from popular EventBus libraries in Android and JavaScript ecosystems. This approach gives you complete control over your event categorization without imposing any predefined categories.
+
+### 🎯 **Why Pure Interface Approach?**
+
+- **✅ Domain-Specific**: Categories match your exact business needs
+- **✅ Industry Standard**: Follows patterns from Android EventBus, JavaScript libraries  
+- **✅ Type-Safe**: Compile-time validation and IntelliSense support
+- **✅ Extensible**: Easy to add new categories as your app grows
+- **✅ No Bloat**: No unused predefined categories in your bundle
+
+### 🚀 **Basic Implementation**
 
 ```dart
-enum EventCategory {
-  user,         // User-related events
-  order,        // Order and transaction events  
-  product,      // Product catalog events
-  payment,      // Payment processing events
-  notification, // Notification events
-  system,       // System and infrastructure events
+import 'package:riverpod_event_bus/riverpod_event_bus.dart';
+
+// Define categories for your application
+class AppEventCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+  
+  const AppEventCategories._(this.value, this.displayName);
+  
+  // Your app-specific categories
+  static const authentication = AppEventCategories._('auth', 'Authentication Events');
+  static const dataSync = AppEventCategories._('sync', 'Data Synchronization Events');
+  static const notification = AppEventCategories._('notification', 'Notification Events');
 }
 
-// Usage
-class OrderCreatedEvent extends DomainEvent {
-  const OrderCreatedEvent({...}) : super(
-    eventType: 'order.created',
-    category: EventCategory.order, // 👈 Categorize your event
+// Use in your events
+class UserLoginEvent extends DomainEvent {
+  const UserLoginEvent({...}) : super(
+    eventType: 'user.login',
+    category: AppEventCategories.authentication,  // ✨ Your custom category
   );
 }
 ```
 
+### 🏥 **Domain-Specific Categories**
+
+For complex applications, create specialized category groups:
+
+```dart
+// E-commerce domain
+class ECommerceCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+  
+  const ECommerceCategories._(this.value, this.displayName);
+  
+  static const cart = ECommerceCategories._('ecommerce.cart', 'Shopping Cart Events');
+  static const payment = ECommerceCategories._('ecommerce.payment', 'Payment Events');
+  static const inventory = ECommerceCategories._('ecommerce.inventory', 'Inventory Events');
+}
+
+// Medical domain  
+class MedicalCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+  
+  const MedicalCategories._(this.value, this.displayName);
+  
+  static const patient = MedicalCategories._('medical.patient', 'Patient Events');
+  static const doctor = MedicalCategories._('medical.doctor', 'Doctor Events');
+  static const appointment = MedicalCategories._('medical.appointment', 'Appointment Events');
+}
+```
+
+### 🔧 **Category Utilities**
+
+Use built-in utility methods for category operations:
+
+```dart
+// Check category relationships
+final patientCategory = MedicalCategories.patient;
+expect(patientCategory.belongsTo('medical'), isTrue);  // namespace check
+
+// Use utility extensions
+final authCategory = AppEventCategories.authentication;
+expect(authCategory.value, equals('auth'));
+expect(authCategory.displayName, equals('Authentication Events'));
+
+// Category filtering in event streams
+final medicalEvents = eventBus.stream.where(
+  (event) => event.category.belongsTo('medical'),
+);
+
+final criticalEvents = eventBus.stream.where(
+  (event) => event.category.value.contains('critical'),
+);
+```
+
 ## 🧪 Testing
 
-The library is thoroughly tested with **54 tests achieving 100% pass rate**:
+The library is thoroughly tested with **72 tests achieving 100% pass rate**:
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_event_bus/riverpod_event_bus.dart';
+
+// Define test categories
+class TestCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+  
+  const TestCategories._(this.value, this.displayName);
+  
+  static const user = TestCategories._('user', 'User Events');
+}
+
+// Define test event
+class TestEvent extends DomainEvent {
+  final String message;
+  
+  const TestEvent({
+    required this.message,
+    required super.eventId,
+    required super.occurredAt,
+  }) : super(
+    eventType: 'test.event',
+    category: TestCategories.user,
+  );
+  
+  @override
+  Map<String, dynamic> toJson() => {
+    'message': message,
+    ...super.toJson(),
+  };
+}
 
 void main() {
   test('should publish and receive events', () async {
@@ -309,7 +494,11 @@ void main() {
     
     eventBus.ofType<TestEvent>().listen(receivedEvents.add);
     
-    final event = TestEvent(message: 'Hello');
+    final event = TestEvent(
+      message: 'Hello',
+      eventId: 'test-123',
+      occurredAt: DateTime.now(),
+    );
     eventBus.publish(event);
     
     expect(receivedEvents, contains(event));
