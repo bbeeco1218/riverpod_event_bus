@@ -120,6 +120,7 @@ library;
 // Core domain event system
 export 'src/core/domain_event.dart';
 export 'src/core/domain_event_bus.dart';
+export 'src/core/event_category.dart';
 export 'src/core/providers.dart';
 
 // Riverpod integration (ViewModel layer)

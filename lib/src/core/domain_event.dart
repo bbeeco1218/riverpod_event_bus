@@ -1,30 +1,59 @@
 import 'package:meta/meta.dart';
+import 'event_category.dart';
 
 /// Base class for all domain events in the application.
 ///
 /// Domain events represent something that has occurred within the domain
 /// that is relevant to other parts of the application.
 ///
-/// Example:
+/// **Hybrid Category Support:**
+/// This class supports multiple ways to specify event categories:
+///
+/// 1. **String-based** (simple):
 /// ```dart
 /// class UserRegisteredEvent extends DomainEvent {
-///   final String userId;
-///   final String email;
-///
 ///   const UserRegisteredEvent({
 ///     required this.userId,
 ///     required this.email,
+///     required super.eventId,
+///     required super.occurredAt,
 ///   }) : super(
 ///     eventType: 'user.registered',
-///     category: EventCategory.user,
+///     category: 'user',  // Simple string
 ///   );
+/// }
+/// ```
 ///
-///   @override
-///   Map<String, dynamic> toJson() => {
-///     'userId': userId,
-///     'email': email,
-///     ...super.toJson(),
-///   };
+/// 2. **Predefined constants** (recommended):
+/// ```dart
+/// class UserRegisteredEvent extends DomainEvent {
+///   const UserRegisteredEvent({
+///     required this.userId,
+///     required this.email,
+///     required super.eventId,
+///     required super.occurredAt,
+///   }) : super(
+///     eventType: 'user.registered',
+///     category: EventCategory.user,  // Predefined constant
+///   );
+/// }
+/// ```
+///
+/// 3. **Custom interface implementations** (advanced):
+/// ```dart
+/// class MedicalCategories implements IEventCategory {
+///   static const patient = MedicalCategories._('medical.patient', 'Patient Events');
+///   // ...
+/// }
+///
+/// class PatientAdmittedEvent extends DomainEvent {
+///   const PatientAdmittedEvent({
+///     required super.eventId,
+///     required super.occurredAt,
+///   }) : super(
+///     eventType: 'patient.admitted',
+///     category: MedicalCategories.patient,  // Custom interface
+///   );
 /// }
 /// ```
 @immutable
@@ -33,7 +62,9 @@ abstract class DomainEvent {
   final String eventType;
 
   /// Event category for domain-based classification
-  final EventCategory category;
+  /// 
+  /// Pure interface-based approach - only accepts IEventCategory implementations
+  final IEventCategory category;
 
   /// The timestamp when this event occurred
   final DateTime occurredAt;
@@ -41,7 +72,10 @@ abstract class DomainEvent {
   /// Unique identifier for this event
   final String eventId;
 
-  /// Creates a new domain event with required fields.
+  /// Creates a new domain event with pure interface-based category.
+  /// 
+  /// The [category] parameter only accepts IEventCategory implementations.
+  /// Users must define their own categories by implementing IEventCategory.
   const DomainEvent({
     required this.eventType,
     required this.category,
@@ -50,12 +84,14 @@ abstract class DomainEvent {
   });
 
   /// Creates a domain event with the current timestamp and generated ID.
+  /// 
+  /// Only accepts IEventCategory implementations - no more dynamic categories.
   factory DomainEvent.now({
     required String eventType,
-    required EventCategory category,
+    required IEventCategory category,
     String? eventId,
   }) =>
-      _TimestampedDomainEvent(
+      _SimpleDomainEvent(
         eventType: eventType,
         category: category,
         occurredAt: DateTime.now(),
@@ -96,47 +132,17 @@ abstract class DomainEvent {
 
   @override
   String toString() =>
-      '$runtimeType{eventType: $eventType, eventId: $eventId, occurredAt: $occurredAt}';
+      '$runtimeType{eventType: $eventType, eventId: $eventId, category: ${category.value}, occurredAt: $occurredAt}';
 }
 
-/// Internal implementation for domain events with explicit timestamps.
-class _TimestampedDomainEvent extends DomainEvent {
-  const _TimestampedDomainEvent({
+/// Simple implementation for domain events with pure interface-based categories.
+/// 
+/// This class is used by factory constructors when we need a concrete implementation.
+class _SimpleDomainEvent extends DomainEvent {
+  const _SimpleDomainEvent({
     required super.eventType,
     required super.category,
     required super.occurredAt,
     required super.eventId,
   });
-}
-
-/// Event category enumeration for domain-based classification
-///
-/// This helps organize and filter events by business domain.
-/// Add new categories as your application grows.
-enum EventCategory {
-  /// User-related events (registration, login, profile changes)
-  user('user'),
-
-  /// Order and transaction events
-  order('order'),
-
-  /// Product and inventory events
-  product('product'),
-
-  /// Payment and billing events
-  payment('payment'),
-
-  /// Notification events
-  notification('notification'),
-
-  /// System events (startup, shutdown, maintenance)
-  system('system');
-
-  const EventCategory(this.value);
-
-  /// The string value of the category
-  final String value;
-
-  @override
-  String toString() => value;
 }
