@@ -9,7 +9,7 @@ A powerful, type-safe event bus library that integrates seamlessly with **Riverp
 ## ✨ Features
 
 - 🎯 **Type-safe domain events** with automatic serialization
-- 🔄 **Riverpod integration** with automatic lifecycle management  
+- 🔄 **Riverpod integration** with automatic lifecycle management
 - 🪝 **Flutter Hooks support** for widget-level event subscriptions
 - 🏗️ **Architecture enforcement** (View/ViewModel separation)
 - 🛡️ **Memory leak prevention** with automatic subscription disposal
@@ -27,7 +27,7 @@ Add this to your package's `pubspec.yaml` file:
 dependencies:
   riverpod_event_bus: ^0.1.0
   flutter_riverpod: ^2.4.10
-  flutter_hooks: ^0.20.5  # Optional, for hooks support
+  flutter_hooks: ^0.20.5 # Optional, for hooks support
   hooks_riverpod: ^2.4.10 # Optional, for hooks support
 ```
 
@@ -69,14 +69,14 @@ import 'package:riverpod_event_bus/riverpod_event_bus.dart';
 class AppEventCategories implements IEventCategory {
   @override
   final String value;
-  @override  
+  @override
   final String displayName;
-  
+
   const AppEventCategories._(this.value, this.displayName);
-  
+
   // Define your app-specific categories
   static const user = AppEventCategories._('user', 'User Events');
-  static const order = AppEventCategories._('order', 'Order Events'); 
+  static const order = AppEventCategories._('order', 'Order Events');
   static const system = AppEventCategories._('system', 'System Events');
 }
 ```
@@ -120,9 +120,9 @@ class MedicalCategories implements IEventCategory {
   final String value;
   @override
   final String displayName;
-  
+
   const MedicalCategories._(this.value, this.displayName);
-  
+
   static const patient = MedicalCategories._('medical.patient', 'Patient Events');
   static const doctor = MedicalCategories._('medical.doctor', 'Doctor Events');
   static const appointment = MedicalCategories._('medical.appointment', 'Appointment Events');
@@ -143,11 +143,11 @@ class PatientAdmittedEvent extends DomainEvent {
 class UserRepository extends _$UserRepository {
   @override
   Future<void> build() async {}
-  
+
   Future<void> registerUser(String email) async {
     // Your registration logic...
     final userId = await _performRegistration(email);
-    
+
     // Publish the event with your custom category
     final eventBus = ref.read(domainEventBusProvider);
     eventBus.publish(UserRegisteredEvent(
@@ -240,16 +240,17 @@ The library **prevents architectural violations** at compile-time:
 class BadExample extends ConsumerWidget {
   Widget build(context, ref) {
     final eventBus = ref.read(domainEventBusProvider);
-    
+
     // ❌ Don't use in Views! Will throw ArgumentError
     ref.listenToEvent(eventBus.ofType<UserEvent>(), (event) {});
-    
+
     return Container();
   }
 }
 ```
 
 **Error message:**
+
 ```
 🚨 Architecture Rule Violation!
 
@@ -338,7 +339,7 @@ Raw<DomainEventBus> userScopedEventBus(UserScopedEventBusRef ref) {
 ### Debug Information
 
 ```dart
-@riverpod  
+@riverpod
 class EventBusMonitor extends _$EventBusMonitor {
   @override
   String build() {
@@ -355,7 +356,7 @@ The library uses a **pure interface-based approach** for event categories, follo
 ### 🎯 **Why Pure Interface Approach?**
 
 - **✅ Domain-Specific**: Categories match your exact business needs
-- **✅ Industry Standard**: Follows patterns from Android EventBus, JavaScript libraries  
+- **✅ Industry Standard**: Follows patterns from Android EventBus, JavaScript libraries
 - **✅ Type-Safe**: Compile-time validation and IntelliSense support
 - **✅ Extensible**: Easy to add new categories as your app grows
 - **✅ No Bloat**: No unused predefined categories in your bundle
@@ -371,9 +372,9 @@ class AppEventCategories implements IEventCategory {
   final String value;
   @override
   final String displayName;
-  
+
   const AppEventCategories._(this.value, this.displayName);
-  
+
   // Your app-specific categories
   static const authentication = AppEventCategories._('auth', 'Authentication Events');
   static const dataSync = AppEventCategories._('sync', 'Data Synchronization Events');
@@ -400,23 +401,23 @@ class ECommerceCategories implements IEventCategory {
   final String value;
   @override
   final String displayName;
-  
+
   const ECommerceCategories._(this.value, this.displayName);
-  
+
   static const cart = ECommerceCategories._('ecommerce.cart', 'Shopping Cart Events');
   static const payment = ECommerceCategories._('ecommerce.payment', 'Payment Events');
   static const inventory = ECommerceCategories._('ecommerce.inventory', 'Inventory Events');
 }
 
-// Medical domain  
+// Medical domain
 class MedicalCategories implements IEventCategory {
   @override
   final String value;
   @override
   final String displayName;
-  
+
   const MedicalCategories._(this.value, this.displayName);
-  
+
   static const patient = MedicalCategories._('medical.patient', 'Patient Events');
   static const doctor = MedicalCategories._('medical.doctor', 'Doctor Events');
   static const appointment = MedicalCategories._('medical.appointment', 'Appointment Events');
@@ -449,8 +450,6 @@ final criticalEvents = eventBus.stream.where(
 
 ## 🧪 Testing
 
-The library is thoroughly tested with **72 tests achieving 100% pass rate**:
-
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_event_bus/riverpod_event_bus.dart';
@@ -461,16 +460,16 @@ class TestCategories implements IEventCategory {
   final String value;
   @override
   final String displayName;
-  
+
   const TestCategories._(this.value, this.displayName);
-  
+
   static const user = TestCategories._('user', 'User Events');
 }
 
 // Define test event
 class TestEvent extends DomainEvent {
   final String message;
-  
+
   const TestEvent({
     required this.message,
     required super.eventId,
@@ -479,7 +478,7 @@ class TestEvent extends DomainEvent {
     eventType: 'test.event',
     category: TestCategories.user,
   );
-  
+
   @override
   Map<String, dynamic> toJson() => {
     'message': message,
@@ -491,16 +490,16 @@ void main() {
   test('should publish and receive events', () async {
     final eventBus = DomainEventBus();
     final receivedEvents = <TestEvent>[];
-    
+
     eventBus.ofType<TestEvent>().listen(receivedEvents.add);
-    
+
     final event = TestEvent(
       message: 'Hello',
       eventId: 'test-123',
       occurredAt: DateTime.now(),
     );
     eventBus.publish(event);
-    
+
     expect(receivedEvents, contains(event));
   });
 }
@@ -518,6 +517,7 @@ Check out the `/example` folder for complete examples:
 ## 🎯 Best Practices
 
 ### 1. Event Naming Convention
+
 ```dart
 // ✅ Use descriptive, past-tense event names
 class UserRegisteredEvent extends DomainEvent { ... }
@@ -530,6 +530,7 @@ class RegisterUser extends DomainEvent { ... }
 ```
 
 ### 2. Event Granularity
+
 ```dart
 // ✅ Fine-grained events for specific actions
 class UserEmailUpdatedEvent extends DomainEvent { ... }
@@ -540,6 +541,7 @@ class UserUpdatedEvent extends DomainEvent { ... }
 ```
 
 ### 3. Error Handling
+
 ```dart
 // ✅ Handle errors gracefully
 ref.listenToEvent(
@@ -556,6 +558,7 @@ ref.listenToEvent(
 ```
 
 ### 4. Memory Management
+
 ```dart
 // ✅ The library handles this automatically
 // No need for manual subscription disposal!
