@@ -17,7 +17,6 @@ A powerful, type-safe event bus library that integrates seamlessly with **Riverp
 - 🔥 **Pure interface-based event categories** (industry best practices)
 - 🧩 **Developer experience optimized** with progressive enhancement
 - 🐛 **Debug-friendly** with comprehensive logging and error handling
-- ✅ **Fully tested** (72 tests, 100% pass rate)
 
 ## 📦 Installation
 
