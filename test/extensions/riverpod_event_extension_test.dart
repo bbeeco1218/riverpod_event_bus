@@ -1,9 +1,19 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_event_bus/src/core/domain_event.dart';
-import 'package:riverpod_event_bus/src/core/domain_event_bus.dart';
-import 'package:riverpod_event_bus/src/extensions/riverpod_event_extension.dart';
+import 'package:riverpod_event_bus/riverpod_event_bus.dart';
+
+// Test category implementation
+class ExtensionTestCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+
+  const ExtensionTestCategories._(this.value, this.displayName);
+
+  static const system = ExtensionTestCategories._('system', 'System Events');
+}
 
 // Simple test event
 class SimpleTestEvent extends DomainEvent {
@@ -15,7 +25,7 @@ class SimpleTestEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'test.simple',
-          category: EventCategory.system,
+          category: ExtensionTestCategories.system,
         );
 
   @override

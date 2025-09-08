@@ -1,6 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:riverpod_event_bus/src/core/domain_event.dart';
-import 'package:riverpod_event_bus/src/core/domain_event_bus.dart';
+import 'package:riverpod_event_bus/riverpod_event_bus.dart';
+
+// Test category implementation
+class BusTestCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+  
+  const BusTestCategories._(this.value, this.displayName);
+  
+  static const user = BusTestCategories._('user', 'User Events');
+  static const order = BusTestCategories._('order', 'Order Events');
+}
 
 // Test events
 class UserRegisteredEvent extends DomainEvent {
@@ -14,7 +26,7 @@ class UserRegisteredEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'user.registered',
-          category: EventCategory.user,
+          category: BusTestCategories.user,
         );
 
   @override
@@ -47,7 +59,7 @@ class OrderCreatedEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'order.created',
-          category: EventCategory.order,
+          category: BusTestCategories.order,
         );
 
   @override

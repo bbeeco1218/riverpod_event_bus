@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:riverpod_event_bus/src/core/domain_event.dart';
-import 'package:riverpod_event_bus/src/core/domain_event_bus.dart';
+import 'package:riverpod_event_bus/riverpod_event_bus.dart';
 import 'package:riverpod_event_bus/hooks.dart';
+
+// Test category implementation
+class HookTestCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+
+  const HookTestCategories._(this.value, this.displayName);
+
+  static const system = HookTestCategories._('system', 'System Events');
+}
 
 // Test event for hook testing
 class HookTestEvent extends DomainEvent {
@@ -15,7 +26,7 @@ class HookTestEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'hook.test',
-          category: EventCategory.system,
+          category: HookTestCategories.system,
         );
 
   @override
@@ -46,15 +57,15 @@ void main() {
         return ProviderScope(
           child: MaterialApp(
             home: HookConsumer(
-            builder: (context, ref, child) {
-              useEventSubscription<HookTestEvent>(
-                eventBus.ofType<HookTestEvent>(),
-                (event) => receivedEvents.add(event),
-                debugName: 'TestWidget',
-              );
+              builder: (context, ref, child) {
+                useEventSubscription<HookTestEvent>(
+                  eventBus.ofType<HookTestEvent>(),
+                  (event) => receivedEvents.add(event),
+                  debugName: 'TestWidget',
+                );
 
-              return Container();
-            },
+                return Container();
+              },
             ),
           ),
         );
@@ -83,15 +94,15 @@ void main() {
         return ProviderScope(
           child: MaterialApp(
             home: HookConsumer(
-            builder: (context, ref, child) {
-              useEventSubscription<HookTestEvent>(
-                eventBus.ofType<HookTestEvent>(),
-                (event) => receivedEvents.add(event),
-                debugName: 'TestWidget',
-              );
+              builder: (context, ref, child) {
+                useEventSubscription<HookTestEvent>(
+                  eventBus.ofType<HookTestEvent>(),
+                  (event) => receivedEvents.add(event),
+                  debugName: 'TestWidget',
+                );
 
-              return Container();
-            },
+                return Container();
+              },
             ),
           ),
         );
@@ -125,18 +136,18 @@ void main() {
         return ProviderScope(
           child: MaterialApp(
             home: HookConsumer(
-            builder: (context, ref, child) {
-              useEventSubscription<HookTestEvent>(
-                eventBus
-                    .ofType<HookTestEvent>()
-                    .where((event) => event.message.contains(message)),
-                (event) => receivedEvents.add(event),
-                dependencies: [message],
-                debugName: 'TestWidget',
-              );
+              builder: (context, ref, child) {
+                useEventSubscription<HookTestEvent>(
+                  eventBus
+                      .ofType<HookTestEvent>()
+                      .where((event) => event.message.contains(message)),
+                  (event) => receivedEvents.add(event),
+                  dependencies: [message],
+                  debugName: 'TestWidget',
+                );
 
-              return Container();
-            },
+                return Container();
+              },
             ),
           ),
         );
@@ -177,18 +188,18 @@ void main() {
         return ProviderScope(
           child: MaterialApp(
             home: HookConsumer(
-            builder: (context, ref, child) {
-              useEventSubscription<HookTestEvent>(
-                eventBus.ofType<HookTestEvent>(),
-                (event) {
-                  callbackExecuted = true;
-                  throw Exception('Test error in hook callback');
-                },
-                debugName: 'TestWidget',
-              );
+              builder: (context, ref, child) {
+                useEventSubscription<HookTestEvent>(
+                  eventBus.ofType<HookTestEvent>(),
+                  (event) {
+                    callbackExecuted = true;
+                    throw Exception('Test error in hook callback');
+                  },
+                  debugName: 'TestWidget',
+                );
 
-              return Container();
-            },
+                return Container();
+              },
             ),
           ),
         );
@@ -218,16 +229,16 @@ void main() {
         return ProviderScope(
           child: MaterialApp(
             home: HookConsumer(
-            builder: (context, ref, child) {
-              useEventSubscriptionWhen<HookTestEvent>(
-                eventBus.ofType<HookTestEvent>(),
-                condition: (event) => event.message.contains('Pass'),
-                onEvent: (event) => receivedEvents.add(event),
-                debugName: 'TestWidget',
-              );
+              builder: (context, ref, child) {
+                useEventSubscriptionWhen<HookTestEvent>(
+                  eventBus.ofType<HookTestEvent>(),
+                  condition: (event) => event.message.contains('Pass'),
+                  onEvent: (event) => receivedEvents.add(event),
+                  debugName: 'TestWidget',
+                );
 
-              return Container();
-            },
+                return Container();
+              },
             ),
           ),
         );
@@ -262,14 +273,14 @@ void main() {
         return ProviderScope(
           child: MaterialApp(
             home: HookConsumer(
-            builder: (context, ref, child) {
-              useMultipleEventSubscriptions({
-                eventBus.ofType<HookTestEvent>(): (event) =>
-                    receivedTestEvents.add(event as HookTestEvent),
-              }, debugName: 'TestWidget');
+              builder: (context, ref, child) {
+                useMultipleEventSubscriptions({
+                  eventBus.ofType<HookTestEvent>(): (event) =>
+                      receivedTestEvents.add(event as HookTestEvent),
+                }, debugName: 'TestWidget');
 
-              return Container();
-            },
+                return Container();
+              },
             ),
           ),
         );

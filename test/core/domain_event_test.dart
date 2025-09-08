@@ -1,5 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:riverpod_event_bus/src/core/domain_event.dart';
+import 'package:riverpod_event_bus/riverpod_event_bus.dart';
+
+// Test category implementation
+class TestCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+  
+  const TestCategories._(this.value, this.displayName);
+  
+  static const system = TestCategories._('system', 'System Events');
+  static const user = TestCategories._('user', 'User Events');
+  static const order = TestCategories._('order', 'Order Events');
+}
 
 // Test events for testing purposes
 class TestEvent extends DomainEvent {
@@ -11,7 +25,7 @@ class TestEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'test.event',
-          category: EventCategory.system,
+          category: TestCategories.system,
         );
 
   @override
@@ -40,7 +54,7 @@ class UserRegisteredTestEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'user.registered',
-          category: EventCategory.user,
+          category: TestCategories.user,
         );
 
   @override
@@ -73,7 +87,7 @@ class OrderCreatedTestEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'order.created',
-          category: EventCategory.order,
+          category: TestCategories.order,
         );
 
   @override
@@ -115,7 +129,7 @@ void main() {
 
       expect(event.message, equals('test message'));
       expect(event.eventType, equals('test.event'));
-      expect(event.category, equals(EventCategory.system));
+      expect(event.category, equals(TestCategories.system));
       expect(event.eventId, equals(testEventId));
       expect(event.occurredAt, equals(testTime));
     });
@@ -211,29 +225,33 @@ void main() {
     test('should work with DomainEvent.now factory', () {
       final event = DomainEvent.now(
         eventType: 'test.factory',
-        category: EventCategory.user,
+        category: TestCategories.user,
       );
 
       expect(event.eventType, equals('test.factory'));
-      expect(event.category, equals(EventCategory.user));
+      expect(event.category, equals(TestCategories.user));
       expect(event.occurredAt, isA<DateTime>());
       expect(event.eventId, isNotEmpty);
     });
   });
 
-  group('EventCategory', () {
+  group('TestCategories', () {
     test('should have correct string values', () {
-      expect(EventCategory.user.value, equals('user'));
-      expect(EventCategory.order.value, equals('order'));
-      expect(EventCategory.product.value, equals('product'));
-      expect(EventCategory.payment.value, equals('payment'));
-      expect(EventCategory.notification.value, equals('notification'));
-      expect(EventCategory.system.value, equals('system'));
+      expect(TestCategories.user.value, equals('user'));
+      expect(TestCategories.order.value, equals('order'));
+      expect(TestCategories.system.value, equals('system'));
     });
 
-    test('should have meaningful toString', () {
-      expect(EventCategory.user.toString(), equals('user'));
-      expect(EventCategory.order.toString(), equals('order'));
+    test('should have meaningful display names', () {
+      expect(TestCategories.user.displayName, equals('User Events'));
+      expect(TestCategories.order.displayName, equals('Order Events'));
+      expect(TestCategories.system.displayName, equals('System Events'));
+    });
+
+    test('should implement IEventCategory interface', () {
+      expect(TestCategories.user, isA<IEventCategory>());
+      expect(TestCategories.order, isA<IEventCategory>());
+      expect(TestCategories.system, isA<IEventCategory>());
     });
   });
 
@@ -249,7 +267,7 @@ void main() {
       );
 
       expect(event.eventType, equals('user.registered'));
-      expect(event.category, equals(EventCategory.user));
+      expect(event.category, equals(TestCategories.user));
       expect(event.userId, equals('user-123'));
       expect(event.email, equals('test@example.com'));
 
@@ -267,7 +285,7 @@ void main() {
       );
 
       expect(event.eventType, equals('order.created'));
-      expect(event.category, equals(EventCategory.order));
+      expect(event.category, equals(TestCategories.order));
       expect(event.orderId, equals('order-456'));
       expect(event.amount, equals(199.99));
 

@@ -1,8 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_event_bus/src/core/providers.dart';
-import 'package:riverpod_event_bus/src/core/domain_event_bus.dart';
-import 'package:riverpod_event_bus/src/core/domain_event.dart';
+import 'package:riverpod_event_bus/riverpod_event_bus.dart';
+
+// Test category implementation
+class ProviderTestCategories implements IEventCategory {
+  @override
+  final String value;
+  @override
+  final String displayName;
+
+  const ProviderTestCategories._(this.value, this.displayName);
+
+  static const system = ProviderTestCategories._('system', 'System Events');
+}
 
 // Test event for provider testing
 class ProviderTestEvent extends DomainEvent {
@@ -14,7 +24,7 @@ class ProviderTestEvent extends DomainEvent {
     required super.occurredAt,
   }) : super(
           eventType: 'provider.test',
-          category: EventCategory.system,
+          category: ProviderTestCategories.system,
         );
 
   @override
@@ -258,7 +268,7 @@ void main() {
         // Manually untrack before cancelling
         eventBus.untrackSubscription(subscription);
         await subscription.cancel();
-        
+
         // Verify subscription count decreases
         container.refresh(eventBusDebugInfoProvider);
         debugInfo = container.read(eventBusDebugInfoProvider);

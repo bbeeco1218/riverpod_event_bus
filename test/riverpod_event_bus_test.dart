@@ -8,7 +8,7 @@ void main() {
       expect(DomainEvent, isNotNull);
       expect(DomainEventBus, isNotNull);
       expect(AdvancedDomainEventBus, isNotNull);
-      expect(EventCategory, isNotNull);
+      expect(IEventCategory, isNotNull);
     });
 
     test('should export providers', () {
