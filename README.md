@@ -12,11 +12,11 @@ A powerful, type-safe event bus library that integrates seamlessly with **Riverp
 - 🔄 **Riverpod integration** with automatic lifecycle management
 - 🪝 **Flutter Hooks support** for widget-level event subscriptions
 - 🏗️ **Architecture enforcement** (View/ViewModel separation)
-- 🛡️ **Memory leak prevention** with automatic subscription disposal
+- 🛡️ **Error resilience** with graceful disposal and automatic recovery
+- 🔧 **Custom error handling** with optional onError callbacks
 - ⚡ **Advanced event processing** (throttling, buffering, filtering)
 - 🔥 **Pure interface-based event categories** (industry best practices)
-- 🧩 **Developer experience optimized** with progressive enhancement
-- 🐛 **Debug-friendly** with comprehensive logging and error handling
+- 🐛 **Production stability** with comprehensive logging and crash prevention
 
 ## 📦 Installation
 
@@ -210,6 +210,12 @@ class HomeScreen extends HookConsumerWidget {
           SnackBar(content: Text('Welcome ${event.email}!')),
         );
       },
+      onError: (error, stackTrace) {
+        // Optional custom error handling
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Event processing failed')),
+        );
+      },
       debugName: 'HomeScreen',
     );
 
@@ -350,21 +356,11 @@ class EventBusMonitor extends _$EventBusMonitor {
 
 ## 🎨 Event Categories
 
-The library uses a **pure interface-based approach** for event categories, following industry best practices from popular EventBus libraries in Android and JavaScript ecosystems. This approach gives you complete control over your event categorization without imposing any predefined categories.
+The library uses a **pure interface-based approach** for event categories, giving you complete control without imposing predefined categories.
 
-### 🎯 **Why Pure Interface Approach?**
-
-- **✅ Domain-Specific**: Categories match your exact business needs
-- **✅ Industry Standard**: Follows patterns from Android EventBus, JavaScript libraries
-- **✅ Type-Safe**: Compile-time validation and IntelliSense support
-- **✅ Extensible**: Easy to add new categories as your app grows
-- **✅ No Bloat**: No unused predefined categories in your bundle
-
-### 🚀 **Basic Implementation**
+### Basic Implementation
 
 ```dart
-import 'package:riverpod_event_bus/riverpod_event_bus.dart';
-
 // Define categories for your application
 class AppEventCategories implements IEventCategory {
   @override
@@ -374,74 +370,29 @@ class AppEventCategories implements IEventCategory {
 
   const AppEventCategories._(this.value, this.displayName);
 
-  // Your app-specific categories
-  static const authentication = AppEventCategories._('auth', 'Authentication Events');
-  static const dataSync = AppEventCategories._('sync', 'Data Synchronization Events');
-  static const notification = AppEventCategories._('notification', 'Notification Events');
+  static const user = AppEventCategories._('user', 'User Events');
+  static const order = AppEventCategories._('order', 'Order Events');
+  static const system = AppEventCategories._('system', 'System Events');
 }
 
 // Use in your events
 class UserLoginEvent extends DomainEvent {
   const UserLoginEvent({...}) : super(
     eventType: 'user.login',
-    category: AppEventCategories.authentication,  // ✨ Your custom category
+    category: AppEventCategories.user,
   );
 }
 ```
 
-### 🏥 **Domain-Specific Categories**
-
-For complex applications, create specialized category groups:
+### Category Filtering
 
 ```dart
-// E-commerce domain
-class ECommerceCategories implements IEventCategory {
-  @override
-  final String value;
-  @override
-  final String displayName;
-
-  const ECommerceCategories._(this.value, this.displayName);
-
-  static const cart = ECommerceCategories._('ecommerce.cart', 'Shopping Cart Events');
-  static const payment = ECommerceCategories._('ecommerce.payment', 'Payment Events');
-  static const inventory = ECommerceCategories._('ecommerce.inventory', 'Inventory Events');
-}
-
-// Medical domain
-class MedicalCategories implements IEventCategory {
-  @override
-  final String value;
-  @override
-  final String displayName;
-
-  const MedicalCategories._(this.value, this.displayName);
-
-  static const patient = MedicalCategories._('medical.patient', 'Patient Events');
-  static const doctor = MedicalCategories._('medical.doctor', 'Doctor Events');
-  static const appointment = MedicalCategories._('medical.appointment', 'Appointment Events');
-}
-```
-
-### 🔧 **Category Utilities**
-
-Use built-in utility methods for category operations:
-
-```dart
-// Check category relationships
-final patientCategory = MedicalCategories.patient;
-expect(patientCategory.belongsTo('medical'), isTrue);  // namespace check
-
-// Use utility extensions
-final authCategory = AppEventCategories.authentication;
-expect(authCategory.value, equals('auth'));
-expect(authCategory.displayName, equals('Authentication Events'));
-
-// Category filtering in event streams
-final medicalEvents = eventBus.stream.where(
-  (event) => event.category.belongsTo('medical'),
+// Filter by category namespace
+final userEvents = eventBus.stream.where(
+  (event) => event.category.belongsTo('user'),
 );
 
+// Filter by custom criteria
 final criticalEvents = eventBus.stream.where(
   (event) => event.category.value.contains('critical'),
 );
@@ -539,10 +490,24 @@ class UserPasswordChangedEvent extends DomainEvent { ... }
 class UserUpdatedEvent extends DomainEvent { ... }
 ```
 
-### 3. Error Handling
+### 3. Error Handling & Resilience
+
+The library provides robust error handling to ensure production stability:
 
 ```dart
-// ✅ Handle errors gracefully
+// ✅ Custom error handling in Hooks
+useEventSubscription(
+  eventBus.ofType<PaymentEvent>(),
+  (event) => _processPayment(event),
+  onError: (error, stackTrace) {
+    // Custom error handling - optional
+    _showErrorMessage('Payment failed');
+    _logError(error, stackTrace);
+  },
+  debugName: 'PaymentProcessor',
+);
+
+// ✅ Error resilience in ViewModels
 ref.listenToEvent(
   eventBus.ofType<PaymentEvent>(),
   (event) {
@@ -556,6 +521,11 @@ ref.listenToEvent(
 );
 ```
 
+**Built-in Error Resilience:**
+- **Graceful Disposal**: Events to disposed buses are safely ignored
+- **Stream Continuity**: Subscriptions stay active even when handlers fail  
+- **Error Isolation**: Handler errors don't crash the app or affect other subscribers
+
 ### 4. Memory Management
 
 ```dart
@@ -568,105 +538,18 @@ ref.listenToEvent(
 
 ## 🚀 Roadmap
 
-We're continuously working to make riverpod_event_bus even more powerful and developer-friendly. Here are the upcoming features we're planning to implement:
+### Upcoming Features
 
-### 📌 Sticky Events (v0.2.0)
-**Persistent event state for late subscribers**
-
-Keep the last event of a specific type and automatically deliver it to new subscribers. Perfect for maintaining app state like authentication, theme settings, or initial data loads.
-
-```dart
-// Publish a sticky event that persists
-eventBus.publishSticky(UserLoggedInEvent(
-  userId: 'user-123',
-  email: 'user@example.com',
-));
-
-// Late subscribers immediately receive the last sticky event
-eventBus.ofTypeSticky<UserLoggedInEvent>().listen((event) {
-  // Receives the last UserLoggedInEvent immediately
-  print('User state: ${event.email}');
-});
-```
-
-**Use Cases:**
-- Authentication state persistence
-- Theme/locale settings
-- Configuration data
-- Last known location or status
-
-### 🔧 Event Interceptors/Middleware (v0.2.0)
-**Cross-cutting concerns for all events**
-
-Add pre and post-processing logic to all events flowing through the event bus. Implement logging, analytics, error handling, and monitoring in a centralized way.
-
-```dart
-// Add interceptors for cross-cutting concerns
-eventBus.addInterceptor(
-  EventInterceptor(
-    onPublish: (event) => logger.log('Publishing: ${event.eventType}'),
-    onSubscribe: (event) => analytics.track(event),
-    onError: (event, error) => crashlytics.recordError(error, event),
-  ),
-);
-
-// All events automatically flow through interceptors
-eventBus.publish(anyEvent); // Automatically logged and tracked
-```
-
-**Use Cases:**
-- Centralized logging
-- Analytics tracking
-- Error reporting
-- Performance monitoring
-- Security auditing
-- Event validation
-
-### 📚 Event History/Replay (v0.3.0)
-**Time-travel debugging and state reconstruction**
-
-Store recent events and replay them for debugging, testing, or state reconstruction. Configure buffer size and replay strategies for different scenarios.
-
-```dart
-// Create an event bus with history buffer
-final replayBus = ReplayEventBus(
-  bufferSize: 20, // Keep last 20 events
-  duration: Duration(minutes: 5), // Or time-based buffer
-);
-
-// Replay recent events for debugging
-replayBus.replayLast(10).listen((event) {
-  print('Replaying: ${event.eventType} at ${event.occurredAt}');
-});
-
-// Useful for debugging state issues
-replayBus.replayWhere(
-  (event) => event.category == AppCategories.user,
-).listen((event) {
-  // Replay only user-related events
-});
-```
-
-**Use Cases:**
-- Debug mode event replay
-- State reconstruction after errors
-- Testing and development
-- Audit trails
-- Undo/redo functionality
-
-### 🎯 Additional Planned Features
-
-- **Wildcard Subscriptions**: Pattern-based event matching (e.g., `user.*`, `order.#`)
-- **Priority Subscriptions**: Control event processing order
-- **Dead Letter Queue**: Track and handle unprocessed events
-- **Event Metrics**: Built-in performance and usage statistics
-- **Event Batching**: Optimize performance with batch processing
+- **📌 Sticky Events**: Persistent event state for late subscribers
+- **🔧 Event Interceptors**: Cross-cutting concerns (logging, analytics, error handling)
+- **📚 Event History/Replay**: Time-travel debugging and state reconstruction
+- **🎯 Advanced Features**: Wildcard subscriptions, priority handling, dead letter queue
 
 We're always open to community feedback! If you have ideas for features or improvements, please [open an issue](https://github.com/bbeeco1218/riverpod_event_bus/issues) or join the discussion.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+Contributions are welcome! Please open an issue or submit a pull request on GitHub.
 
 ### Development Setup
 
