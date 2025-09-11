@@ -55,6 +55,21 @@ import '../core/domain_event.dart';
 /// - Debug logging with debugName
 /// - Error handling with graceful recovery
 extension RiverpodEventSubscriptionExtension on Ref {
+  /// Handles subscription callback errors with detailed logging.
+  void _handleSubscriptionError(dynamic error, StackTrace stackTrace, String? debugName) {
+    if (kDebugMode) {
+      debugPrint('❌ ${debugName ?? 'Unknown'} event handler error: $error\n$stackTrace');
+    }
+    // TODO: Add error reporting service integration if needed
+  }
+
+  /// Handles stream errors with recovery logging.
+  void _handleStreamError(dynamic error, StackTrace stackTrace, String? debugName) {
+    if (kDebugMode) {
+      debugPrint('⚠️ ${debugName ?? 'Unknown'} event stream error: $error\n$stackTrace');
+    }
+    // TODO: Add stream recovery logic or Dead Letter Queue if needed
+  }
   /// Checks if this extension is being used in a View (Widget) context.
   /// Throws ArgumentError if used incorrectly.
   void _checkViewUsage(String? debugName) {
@@ -125,7 +140,7 @@ to prevent performance issues and memory leaks.
     StreamSubscription<T>? subscription;
 
     try {
-      // Subscribe to the event stream
+      // 🔄 Subscribe to the event stream with enhanced error handling
       subscription = stream.listen(
         (event) {
           try {
@@ -138,16 +153,15 @@ to prevent performance issues and memory leaks.
             // Execute user callback
             onEvent(event);
           } catch (e, stackTrace) {
-            // Log callback errors but don't crash the app
-            debugPrint(
-                '❌ ${debugName ?? 'Unknown'} event handler error: $e\n$stackTrace');
+            // 🚨 Enhanced callback error handling
+            _handleSubscriptionError(e, stackTrace, debugName);
           }
         },
         onError: (error, stackTrace) {
-          // Handle stream errors
-          debugPrint(
-              '⚠️ ${debugName ?? 'Unknown'} event stream error: $error\n$stackTrace');
+          // ⚡ Enhanced stream error handling
+          _handleStreamError(error, stackTrace, debugName);
         },
+        cancelOnError: false, // 🔑 Critical: Prevent auto-cancellation on error
       );
 
       // Debug log subscription start
