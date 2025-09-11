@@ -457,12 +457,12 @@ void main() {
 
 ## 📚 Examples
 
-Check out the `/example` folder for complete examples:
+Complete examples are coming soon and will include:
 
 - **Basic Usage**: Simple event publishing and subscription
-- **Clean Architecture**: Full View/ViewModel separation example
+- **Clean Architecture**: Full View/ViewModel separation
 - **Advanced Features**: Throttling, buffering, and filtering
-- **Testing**: How to test your event-driven architecture
+- **Testing**: Event-driven architecture testing patterns
 
 ## 🎯 Best Practices
 
@@ -522,8 +522,9 @@ ref.listenToEvent(
 ```
 
 **Built-in Error Resilience:**
+
 - **Graceful Disposal**: Events to disposed buses are safely ignored
-- **Stream Continuity**: Subscriptions stay active even when handlers fail  
+- **Stream Continuity**: Subscriptions stay active even when handlers fail
 - **Error Isolation**: Handler errors don't crash the app or affect other subscribers
 
 ### 4. Memory Management
@@ -550,19 +551,6 @@ We're always open to community feedback! If you have ideas for features or impro
 ## 🤝 Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.
-
-### Development Setup
-
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/bbeeco1218/riverpod_event_bus.git`
-3. Install dependencies: `flutter pub get`
-4. Run tests: `flutter test`
-5. Create a feature branch: `git checkout -b feature/amazing-feature`
-6. Make your changes and add tests
-7. Ensure all tests pass: `flutter test`
-8. Commit your changes: `git commit -m 'Add amazing feature'`
-9. Push to your branch: `git push origin feature/amazing-feature`
-10. Open a Pull Request
 
 ## 📄 License
 
