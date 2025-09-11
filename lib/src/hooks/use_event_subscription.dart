@@ -91,12 +91,14 @@ import '../core/domain_event.dart';
 StreamSubscription<T>? useEventSubscription<T extends DomainEvent>(
   Stream<T> stream,
   void Function(T) onEvent, {
+  void Function(Object error, StackTrace stackTrace)? onError,
   List<Object?> dependencies = const [],
   String? debugName,
 }) {
   return use(_EventSubscriptionHook<T>(
     stream: stream,
     onEvent: onEvent,
+    onError: onError,
     dependencies: dependencies,
     debugName: debugName,
   ));
@@ -168,12 +170,14 @@ List<StreamSubscription>? useMultipleEventSubscriptions<T extends DomainEvent>(
 class _EventSubscriptionHook<T extends DomainEvent> extends Hook<StreamSubscription<T>?> {
   final Stream<T> stream;
   final void Function(T) onEvent;
+  final void Function(Object error, StackTrace stackTrace)? onError;
   final List<Object?> dependencies;
   final String? debugName;
 
   const _EventSubscriptionHook({
     required this.stream,
     required this.onEvent,
+    this.onError,
     this.dependencies = const [],
     this.debugName,
   });
@@ -227,7 +231,12 @@ class _EventSubscriptionHookState<T extends DomainEvent>
             // Execute user callback
             hook.onEvent(event);
           } catch (e, stackTrace) {
-            // Log callback errors but don't crash the app
+            // Call user's error handler if provided
+            if (hook.onError != null) {
+              hook.onError!(e, stackTrace);
+            }
+            
+            // Always log callback errors but don't crash the app
             debugPrint(
               '❌ ${hook.debugName ?? 'Unknown'} hook event handler error: $e\n$stackTrace'
             );
