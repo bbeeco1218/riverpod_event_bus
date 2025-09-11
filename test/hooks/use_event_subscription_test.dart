@@ -183,6 +183,8 @@ void main() {
     testWidgets('should handle errors in callback gracefully',
         (WidgetTester tester) async {
       bool callbackExecuted = false;
+      bool errorOccurred = false;
+      Object? caughtError;
 
       Widget buildTestWidget() {
         return ProviderScope(
@@ -195,6 +197,10 @@ void main() {
                     callbackExecuted = true;
                     throw Exception('Test error in hook callback');
                   },
+                  onError: (error, stackTrace) {
+                    errorOccurred = true;
+                    caughtError = error;
+                  },
                   debugName: 'TestWidget',
                 );
 
@@ -206,7 +212,6 @@ void main() {
       }
 
       await tester.pumpWidget(buildTestWidget());
-      await tester.pumpAndSettle();
 
       final testEvent = HookTestEvent(
         message: 'Error Test',
@@ -214,11 +219,15 @@ void main() {
         occurredAt: testTime,
       );
 
-      // Should not throw despite error in callback
+      // Publish event and pump to process
       eventBus.publish(testEvent);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
-      expect(callbackExecuted, isTrue);
+      // Verify graceful error handling
+      expect(callbackExecuted, isTrue, reason: 'Callback should be executed');
+      expect(errorOccurred, isTrue, reason: 'Error should be caught gracefully');
+      expect(caughtError, isA<Exception>(), reason: 'Should catch the thrown exception');
+      expect(caughtError.toString(), contains('Test error in hook callback'));
     });
 
     testWidgets('should support conditional subscriptions',
