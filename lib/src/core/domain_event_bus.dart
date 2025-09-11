@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:rxdart/rxdart.dart';
 import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 import 'domain_event.dart';
 
 /// A powerful event bus that provides type-safe event publishing and subscription.
@@ -38,11 +39,23 @@ class DomainEventBus {
   /// 
   /// Throws [StateError] if the event bus has been disposed.
   void publish(DomainEvent event) {
-    if (_isDisposed) {
-      throw StateError('Cannot publish events to a disposed EventBus');
+    // 🔒 Enhanced lifecycle check
+    if (_isDisposed || _eventStream.isClosed) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [EventBus] Event ignored - bus disposed: ${event.runtimeType}');
+      }
+      return; // Gracefully ignore instead of throwing
     }
     
-    _eventStream.add(event);
+    try {
+      _eventStream.add(event);
+    } catch (e, stackTrace) {
+      // 🛡️ Handle unexpected errors to prevent app crash
+      if (kDebugMode) {
+        debugPrint('❌ [EventBus] Publish failed: $e\n$stackTrace');
+      }
+      // Continue execution - don't crash the app
+    }
   }
 
   /// Returns a stream of events of the specified type [T].
@@ -58,11 +71,19 @@ class DomainEventBus {
   /// });
   /// ```
   Stream<T> ofType<T extends DomainEvent>() {
-    if (_isDisposed) {
+    if (_isDisposed || _eventStream.isClosed) {
       return Stream.empty();
     }
     
-    return _eventStream.stream.whereType<T>();
+    // 🔄 Return error-resilient stream
+    return _eventStream.stream
+      .whereType<T>()
+      .handleError((error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint('⚠️ [EventBus] Stream error: $error');
+        }
+        // Log error but keep stream alive
+      });
   }
 
   /// Returns a stream of all events regardless of type.
@@ -70,11 +91,17 @@ class DomainEventBus {
   /// This is useful for debugging, logging, or implementing
   /// cross-cutting concerns like audit trails.
   Stream<DomainEvent> get allEvents {
-    if (_isDisposed) {
+    if (_isDisposed || _eventStream.isClosed) {
       return Stream.empty();
     }
     
-    return _eventStream.stream;
+    // 🔄 Return error-resilient stream
+    return _eventStream.stream.handleError((error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [EventBus] AllEvents stream error: $error');
+      }
+      // Log error but keep stream alive
+    });
   }
 
   /// Returns whether the event bus has been disposed.
