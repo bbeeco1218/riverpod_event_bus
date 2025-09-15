@@ -498,5 +498,110 @@ void main() {
 
       await subscription.cancel();
     });
+
+    test('should filter events by category using on() method', () async {
+      final userEvent = UserRegisteredEvent(
+        userId: 'user-123',
+        email: 'user@example.com',
+        eventId: 'user-event-123',
+        occurredAt: testTime,
+      );
+      final orderEvent = OrderCreatedEvent(
+        orderId: 'order-456',
+        amount: 99.99,
+        eventId: 'order-event-456',
+        occurredAt: testTime,
+      );
+
+      final userEvents = <UserRegisteredEvent>[];
+      final subscription = eventBus
+          .on<UserRegisteredEvent>(BusTestCategories.user)
+          .listen((event) {
+        userEvents.add(event);
+      });
+
+      // Publish both user and order events
+      eventBus.publish(userEvent);
+      eventBus.publish(orderEvent);
+
+      await Future.delayed(Duration(milliseconds: 10));
+
+      // Should only receive user events, not order events
+      expect(userEvents, hasLength(1));
+      expect(userEvents.first, equals(userEvent));
+
+      await subscription.cancel();
+    });
+
+    test('should filter events by category and type simultaneously', () async {
+      // Create another user event with different type (if we had one)
+      final userEvent1 = UserRegisteredEvent(
+        userId: 'user-1',
+        email: 'user1@example.com',
+        eventId: 'user-event-1',
+        occurredAt: testTime,
+      );
+      final userEvent2 = UserRegisteredEvent(
+        userId: 'user-2',
+        email: 'user2@example.com',
+        eventId: 'user-event-2',
+        occurredAt: testTime,
+      );
+      final orderEvent = OrderCreatedEvent(
+        orderId: 'order-1',
+        amount: 50.0,
+        eventId: 'order-event-1',
+        occurredAt: testTime,
+      );
+
+      final filteredEvents = <UserRegisteredEvent>[];
+      final subscription = eventBus
+          .on<UserRegisteredEvent>(BusTestCategories.user)
+          .listen((event) {
+        filteredEvents.add(event);
+      });
+
+      // Publish events of different types and categories
+      eventBus.publish(userEvent1);
+      eventBus.publish(orderEvent); // Different category - should be filtered out
+      eventBus.publish(userEvent2);
+
+      await Future.delayed(Duration(milliseconds: 10));
+
+      // Should only receive UserRegisteredEvent with user category
+      expect(filteredEvents, hasLength(2));
+      expect(filteredEvents[0], equals(userEvent1));
+      expect(filteredEvents[1], equals(userEvent2));
+
+      await subscription.cancel();
+    });
+
+    test('should return empty stream for non-existent category', () async {
+      // Create a category that no event will match
+      const nonExistentCategory = BusTestCategories._('nonexistent', 'Non-existent Category');
+
+      final userEvent = UserRegisteredEvent(
+        userId: 'user-123',
+        email: 'user@example.com',
+        eventId: 'user-event-123',
+        occurredAt: testTime,
+      );
+
+      final filteredEvents = <UserRegisteredEvent>[];
+      final subscription = eventBus
+          .on<UserRegisteredEvent>(nonExistentCategory)
+          .listen((event) {
+        filteredEvents.add(event);
+      });
+
+      eventBus.publish(userEvent);
+
+      await Future.delayed(Duration(milliseconds: 10));
+
+      // Should receive no events due to category mismatch
+      expect(filteredEvents, isEmpty);
+
+      await subscription.cancel();
+    });
   });
 }
