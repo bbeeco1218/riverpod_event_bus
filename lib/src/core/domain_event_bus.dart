@@ -3,6 +3,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:meta/meta.dart';
 import 'package:flutter/foundation.dart';
 import 'domain_event.dart';
+import 'event_category.dart';
 
 /// A powerful event bus that provides type-safe event publishing and subscription.
 /// 
@@ -86,15 +87,45 @@ class DomainEventBus {
       });
   }
 
+  /// Returns a stream of events of the specified type and category.
+  ///
+  /// Only events that are instances of [T] and match the specified [category]
+  /// will be emitted by this stream. This provides both type-safe and
+  /// category-based event filtering.
+  ///
+  /// Example:
+  /// ```dart
+  /// eventBus.on<UserRegisteredEvent>(MyAppCategories.user).listen((event) {
+  ///   // event is guaranteed to be UserRegisteredEvent with user category
+  ///   print('User ${event.userId} registered in category ${event.category}');
+  /// });
+  /// ```
+  Stream<T> on<T extends DomainEvent>(IEventCategory category) {
+    if (_isDisposed || _eventStream.isClosed) {
+      return Stream.empty();
+    }
+
+    // 🔄 Return error-resilient stream with both type and category filtering
+    return _eventStream.stream
+      .whereType<T>()
+      .where((event) => event.category == category)
+      .handleError((error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint('⚠️ [EventBus] Category stream error: $error');
+        }
+        // Log error but keep stream alive
+      });
+  }
+
   /// Returns a stream of all events regardless of type.
-  /// 
+  ///
   /// This is useful for debugging, logging, or implementing
   /// cross-cutting concerns like audit trails.
   Stream<DomainEvent> get allEvents {
     if (_isDisposed || _eventStream.isClosed) {
       return Stream.empty();
     }
-    
+
     // 🔄 Return error-resilient stream
     return _eventStream.stream.handleError((error, stackTrace) {
       if (kDebugMode) {

@@ -75,7 +75,7 @@ import '../core/domain_event.dart';
 ///
 /// // Category-based event subscription
 /// useEventSubscription(
-///   eventBus.on<UserRegisteredEvent>(EventCategory.user),
+///   eventBus.on<UserRegisteredEvent>(MyAppCategories.user),
 ///   (event) => _handleUserEvent(event),
 ///   debugName: 'UserScreen',
 /// );

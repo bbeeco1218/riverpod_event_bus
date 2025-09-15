@@ -30,7 +30,7 @@
 ///     required DateTime occurredAt,
 ///   }) : super(
 ///     eventType: 'user.registered',
-///     category: EventCategory.user,
+///     category: MyAppCategories.user,
 ///     eventId: eventId,
 ///     occurredAt: occurredAt,
 ///   );

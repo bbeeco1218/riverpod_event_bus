@@ -124,7 +124,7 @@ to prevent performance issues and memory leaks.
   ///
   /// // Category-based event subscription
   /// ref.listenToEvent(
-  ///   eventBus.on<UserRegisteredEvent>(EventCategory.user),
+  ///   eventBus.on<UserRegisteredEvent>(MyAppCategories.user),
   ///   (event) => _handleUserEvent(event),
   ///   debugName: 'UserNotifier',
   /// );
