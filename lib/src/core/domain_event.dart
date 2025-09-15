@@ -34,7 +34,7 @@ import 'event_category.dart';
 ///     required super.occurredAt,
 ///   }) : super(
 ///     eventType: 'user.registered',
-///     category: EventCategory.user,  // Predefined constant
+///     category: MyAppCategories.user,  // Predefined constant
 ///   );
 /// }
 /// ```
